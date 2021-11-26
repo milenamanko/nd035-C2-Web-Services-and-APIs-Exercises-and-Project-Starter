@@ -4,6 +4,8 @@ import static org.hamcrest.Matchers.hasSize;
 import static org.hamcrest.Matchers.is;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -21,6 +23,12 @@ import com.udacity.vehicles.domain.manufacturer.Manufacturer;
 import com.udacity.vehicles.service.CarService;
 import java.net.URI;
 import java.util.Collections;
+import java.util.List;
+
+import org.apache.tomcat.util.file.ConfigurationSource;
+import org.assertj.core.api.Assertions;
+import org.hamcrest.Matchers;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
 import org.junit.runner.RunWith;
@@ -31,6 +39,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.json.JacksonTester;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.test.context.junit4.SpringRunner;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -96,7 +105,13 @@ public class CarControllerTest {
          *   the whole list of vehicles. This should utilize the car from `getCar()`
          *   below (the vehicle will be the first in the list).
          */
+        List<Car> cars = List.of(getCar());
+        mvc.perform(get(new URI("/cars")))
+                .andExpect(status().isOk());
 
+        verify(carService, times(1)).list();
+
+        Assert.assertEquals("sedan", cars.get(0).getDetails().getBody());
     }
 
     /**
@@ -109,6 +124,13 @@ public class CarControllerTest {
          * TODO: Add a test to check that the `get` method works by calling
          *   a vehicle by ID. This should utilize the car from `getCar()` below.
          */
+        Car car = getCar();
+        mvc.perform(get(new URI("/cars/1")))
+                .andExpect(status().isOk());
+
+        verify(carService, times(1)).findById(1L);
+
+        Assert.assertEquals(Condition.USED, car.getCondition());
     }
 
     /**
@@ -122,6 +144,12 @@ public class CarControllerTest {
          *   when the `delete` method is called from the Car Controller. This
          *   should utilize the car from `getCar()` below.
          */
+      carService.save(getCar());
+
+        mvc.perform(delete("/1"))
+                .andExpect(status().isOk());
+
+        verify(carService, times(1)).delete(1L);
     }
 
     /**
